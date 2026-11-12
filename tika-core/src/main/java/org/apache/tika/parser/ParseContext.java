@@ -213,7 +213,7 @@ public class ParseContext implements Serializable {
      * If a factory is not explicitly specified, then a default factory
      * instance is created and returned. The default factory instance is
      * configured to be namespace-aware and to apply reasonable security
-     * using the {@link XMLReaderUtils#IGNORING_STAX_ENTITY_RESOLVER}.
+     * precautions.
      *
      * @since Apache Tika 1.13
      * @return StAX input factory
