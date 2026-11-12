@@ -39,10 +39,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLResolver;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -158,6 +160,10 @@ public class XMLReaderUtils implements Serializable {
             return new InputSource(new StringReader(""));
         }
     };
+
+    //BE CAREFUL with the return type. Some parsers will silently ignore an unexpected return type: CVE-2025-54988
+    private static final XMLResolver IGNORING_STAX_ENTITY_RESOLVER =
+            (publicID, systemID, baseURI, namespace) -> new ByteArrayInputStream(new byte[0]);
 
     /**
      * Set the maximum number of entity expansions allowable in SAX/DOM/StAX parsing.
@@ -314,12 +320,14 @@ public class XMLReaderUtils implements Serializable {
     public static XMLInputFactory getXMLInputFactory() {
         XMLInputFactory factory = XMLInputFactory.newFactory();
 
-        factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
         tryToSetStaxProperty(factory, XMLInputFactory.IS_NAMESPACE_AWARE, true);
+        tryToSetStaxProperty(factory, XMLConstants.ACCESS_EXTERNAL_DTD, "");
         tryToSetStaxProperty(factory, XMLInputFactory.IS_VALIDATING, false);
         tryToSetStaxProperty(factory, XMLInputFactory.SUPPORT_DTD, false);
         tryToSetStaxProperty(factory, XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
 
+        //defense in depth
+        factory.setXMLResolver(IGNORING_STAX_ENTITY_RESOLVER);
         trySetStaxSecurityManager(factory);
         return factory;
     }
@@ -359,6 +367,14 @@ public class XMLReaderUtils implements Serializable {
     }
 
     private static void tryToSetStaxProperty(XMLInputFactory factory, String key, boolean value) {
+        try {
+            factory.setProperty(key, value);
+        } catch (IllegalArgumentException e) {
+            LOG.log(Level.WARNING, "StAX Feature unsupported: " + key, e);
+        }
+    }
+
+    private static void tryToSetStaxProperty(XMLInputFactory factory, String key, String value) {
         try {
             factory.setProperty(key, value);
         } catch (IllegalArgumentException e) {

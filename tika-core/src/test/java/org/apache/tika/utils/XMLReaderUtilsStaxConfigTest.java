@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -47,5 +48,12 @@ public class XMLReaderUtilsStaxConfigTest {
         } catch (XMLStreamException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("accessExternalDTD"));
         }
+    }
+
+    @Test
+    public void testResolverReturnsAStream() throws XMLStreamException {
+        XMLInputFactory factory = new ParseContext().getXMLInputFactory();
+        Object resolved = factory.getXMLResolver().resolveEntity(null, "tutorials.dtd", null, null);
+        assertTrue("resolved to " + resolved, resolved instanceof InputStream);
     }
 }

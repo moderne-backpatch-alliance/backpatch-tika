@@ -52,6 +52,7 @@
     <module>tika-eval</module>
     <module>tika-dl</module>
     <module>tika-nlp</module>
+    <module>tika-woodstox-tests</module>
   </modules>
 
   <profiles>
