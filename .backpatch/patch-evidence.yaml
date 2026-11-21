@@ -1,0 +1,21 @@
+schema: osera-patch-evidence/0.1.0
+producer: moderne
+release: 2.3.0.1-backpatch-00001
+baseline: v2.3.0+backpatch.baseline
+fixes:
+  - cve: CVE-2022-30126
+    upstream_fix_url: https://github.com/apache/tika/commit/83b0de4d60161ebd4bc224141a959ac8c18d95f4
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2022-30126
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-tika/commit/15021b7
+    basis: adapted
+    artifacts:
+      - org.apache.tika:tika-core
+    note: New in this release; ported onto 2.3.0; fixed at 2.3.0.1-backpatch-00001 (backpatch-tika@15021b7).
+tests:
+  commit: 15021b7342b0d4b7aec914c3ec0d62c92365341b
+  command: mvn -B -T1 -pl tika-core -Dossindex.skip=true -Drat.skip=true -Dmaven.test.failure.ignore=true clean test
+  runtime: openjdk version 1.8.0_382, Apache Maven 3.9.16
+  report: tika-core-2.3.0.1-backpatch-00001-tests.zip
+  report_sha256: d4b537d489d95ba79c9f16b501fe1832e9a87f47f68eb8807b2087438443de37
+  result: pass
+  note: 296 tests at the patch commit, 1 of them skipped by the suite, 0 failed, 0 errors.
