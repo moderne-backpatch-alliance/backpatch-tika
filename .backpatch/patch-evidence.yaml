@@ -1,0 +1,21 @@
+schema: osera-patch-evidence/0.1.0
+producer: moderne
+release: 1.13.1-backpatch-00001
+baseline: v1.13+backpatch.baseline
+fixes:
+  - cve: CVE-2016-6809
+    upstream_fix_url: https://github.com/apache/tika/commit/8a68b5d474205cc91cbbb610d4a1c05af57f0610
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2016-6809
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-tika/compare/1f90768~1...052af49
+    basis: backport
+    artifacts:
+      - org.apache.tika:tika-parsers
+    note: "New in this release; ported onto 1.13; fixed at 1.13.1-backpatch-00001 (backpatch-tika@1f90768..052af49). tika-parsers now depends on org.tallison:jmatio 1.2 instead of net.sourceforge.jmatio:jmatio 1.0, as upstream's fix (8a68b5d4): a build that declares or excludes net.sourceforge.jmatio:jmatio by those coordinates must use the new ones. MatParser turns off jmatio's Java object deserialization."
+tests:
+  commit: 052af49a09536f0bdefcac3c2b5b9dba8669ba57
+  command: mvn -B -T1 -pl tika-core,tika-parsers -am -Dossindex.skip=true -Drat.skip=true -Dmaven.test.failure.ignore=true clean test
+  runtime: openjdk version 1.8.0_292 (Ubuntu 16.04 openjdk-8-jdk-headless, Linux x86_64, container backpatch-suite/tika-xenial:local built from ubuntu:16.04, suite-env.Dockerfile), tesseract 3.04.01, Apache Maven 3.9.16
+  report: tika-parsers-1.13.1-backpatch-00001-tests.zip
+  report_sha256: d667d9040018c1758ac65b7261c9134e34cf9cd283f526547d3ef39a4fc3c5f9
+  result: pass
+  note: "881 tests at the patch commit, 14 of them skipped by the suite, 0 failed, 0 errors. The suite of record ran in a Linux x86_64 container of the line's era (Ubuntu 16.04: OpenJDK 8, tesseract 3.04); on the Mac, SQLite3ParserTest fails for want of a sqlite-jdbc 3.8 native library and TesseractOCRParserTest against tesseract 5's command line, not for this change."
