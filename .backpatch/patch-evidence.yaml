@@ -1,6 +1,6 @@
 schema: osera-patch-evidence/0.1.0
 producer: moderne
-release: 1.28.5.1-backpatch-00001
+release: 1.28.5.1-backpatch-00002
 baseline: v1.28.5+backpatch.baseline
 fixes:
   - cve: CVE-2025-66516
@@ -12,12 +12,22 @@ fixes:
       - org.apache.tika:tika-core
       - org.apache.tika:tika-app
       - org.apache.tika:tika-eval
-    note: New in this release; ported onto 1.28.5; fixed at 1.28.5.1-backpatch-00001 (backpatch-tika@c28f1a7..fb6246e).
+    note: Carried from 1.28.5.1-backpatch-00001; ported onto 1.28.5; fixed at 1.28.5.1-backpatch-00001 (backpatch-tika@c28f1a7..fb6246e).
+  - cve: CVE-2026-66755
+    upstream_fix_url: https://github.com/apache/tika/commit/03f6397364551155f71ef54d38969299e5d1a6f9
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-66755
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-tika/commit/9d698e6
+    basis: adapted
+    artifacts:
+      - org.apache.tika:tika-core
+      - org.apache.tika:tika-app
+      - org.apache.tika:tika-eval
+    note: New in this release; ported onto 1.28.5; fixed at 1.28.5.1-backpatch-00002 (backpatch-tika@9d698e6).
 tests:
-  commit: fb6246e1b2c73fc1eab5dcebddc3af88591bae54
-  command: mvn -B -T1 -pl tika-core -am -Dossindex.skip=true -pl tika-core,tika-woodstox-tests -Dmaven.test.failure.ignore=true clean test
+  commit: 9d698e64b5597d79b66ee84bc889f140201b03f4
+  command: mvn -B -T1 -pl tika-core -am -Dossindex.skip=true -pl tika-parsers -Dmaven.test.failure.ignore=true clean test
   runtime: openjdk version 1.8.0_382, Apache Maven 3.9.16
-  report: tika-core-1.28.5.1-backpatch-00001-tests.zip
-  report_sha256: 038cfc582b2b3ef68abe26d13799cc6cb59ee46c82e685d975d0ce84d9d57acc
+  report: tika-core-1.28.5.1-backpatch-00002-tests.zip
+  report_sha256: d8e6c6872a85a7c74c5b62bf3136046e55bc385620e832f4d6b149e2ecb7dd7f
   result: pass
-  note: 279 tests at the patch commit, 1 of them skipped by the suite, 0 failed, 0 errors.
+  note: 1501 tests at the patch commit, 50 of them skipped by the suite, 0 failed, 0 errors.
