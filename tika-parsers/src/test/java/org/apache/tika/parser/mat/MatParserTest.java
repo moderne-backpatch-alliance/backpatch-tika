@@ -18,8 +18,16 @@ package org.apache.tika.parser.mat;
 
 import static org.apache.tika.TikaTest.assertContains;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+
+import com.jmatio.io.MatFileReader;
 
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
@@ -76,5 +84,51 @@ public class MatParserTest {
         // Check Content
         String content = handler.toString();
         assertContains("<p>double:[2x2  double array]</p>", content);
+    }
+
+    @Test
+    public void testObjectDeserializationDisabledAfterLoad() throws Exception {
+        URL parserLoc = MatParser.class.getProtectionDomain().getCodeSource().getLocation();
+        URL readerLoc = MatFileReader.class.getProtectionDomain().getCodeSource().getLocation();
+        //fresh copies of MatParser and MatFileReader, so MatParser's static init runs here
+        try (ChildFirstLoader loader = new ChildFirstLoader(new URL[]{parserLoc, readerLoc},
+                MatParserTest.class.getClassLoader())) {
+            Class<?> reader = loader.loadClass(MatFileReader.class.getName());
+            Method setter;
+            try {
+                setter = reader.getMethod("setAllowObjectDeserialization", boolean.class);
+            } catch (NoSuchMethodException e) {
+                fail("MatFileReader has no switch for Java object deserialization");
+                return;
+            }
+            setter.invoke(null, true);
+            Class.forName(MatParser.class.getName(), true, loader);
+            Field allow = reader.getDeclaredField("ALLOW_OBJECT_DESERIALIZATION");
+            allow.setAccessible(true);
+            assertFalse(allow.getBoolean(null));
+        }
+    }
+
+    private static class ChildFirstLoader extends URLClassLoader {
+        ChildFirstLoader(URL[] urls, ClassLoader parent) {
+            super(urls, parent);
+        }
+
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (!name.startsWith("com.jmatio.") && !name.startsWith(MatParser.class.getName())) {
+                return super.loadClass(name, resolve);
+            }
+            synchronized (getClassLoadingLock(name)) {
+                Class<?> c = findLoadedClass(name);
+                if (c == null) {
+                    c = findClass(name);
+                }
+                if (resolve) {
+                    resolveClass(c);
+                }
+                return c;
+            }
+        }
     }
 }
