@@ -19,17 +19,27 @@ package org.apache.tika.parser.isatab;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
+import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.xml.sax.ContentHandler;
 
 public class ISArchiveParserTest {
+
+	@Rule
+	public TemporaryFolder tempFolder = new TemporaryFolder();
 
 	@Test
 	public void testParseArchive() throws Exception {
@@ -56,5 +66,37 @@ public class ISArchiveParserTest {
 		// INVESTIGATION CONTACTS
 		assertEquals("Invalid Investigation Person Last Name", "Oliver", metadata.get("Investigation Person Last Name")); 
 		assertEquals("Invalid Investigation Person First Name", "Stephen", metadata.get("Investigation Person First Name"));
+	}
+
+	@Test
+	public void testAssayFileNameResolvedWithinDirectory() throws Exception {
+		Path root = tempFolder.getRoot().toPath();
+		// A file sitting next to (but outside of) the ISA-Tab directory.
+		Path outside = root.resolve("outside.txt");
+		Files.write(outside, "OUTSIDE_DIRECTORY_CONTENT".getBytes(StandardCharsets.UTF_8));
+
+		// An ISA-Tab directory whose investigation file points an assay at the sibling file
+		// using a relative name.
+		Path isaDir = Files.createDirectory(root.resolve("isa"));
+		Files.write(isaDir.resolve("i_test.txt"),
+				("STUDY\n"
+						+ "Study File Name\t\"s_test.txt\"\n"
+						+ "Study Assay File Name\t\"../outside.txt\"\n")
+						.getBytes(StandardCharsets.UTF_8));
+		Path study = isaDir.resolve("s_test.txt");
+		Files.write(study, "\"Source Name\"\n\"culture1\"\n".getBytes(StandardCharsets.UTF_8));
+
+		Parser parser = new ISArchiveParser(isaDir.toString());
+		ContentHandler handler = new BodyContentHandler();
+		Metadata metadata = new Metadata();
+		metadata.set(Metadata.RESOURCE_NAME_KEY, "s_test.txt");
+		ParseContext context = new ParseContext();
+
+		try (TikaInputStream tis = TikaInputStream.get(study)) {
+			assertThrows(IOException.class,
+					() -> parser.parse(tis, handler, metadata, context));
+		}
+		assertFalse("assay reader read a file outside the ISA-Tab directory",
+				handler.toString().contains("OUTSIDE_DIRECTORY_CONTENT"));
 	}
 }
