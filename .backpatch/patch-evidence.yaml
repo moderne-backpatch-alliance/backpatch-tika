@@ -1,0 +1,21 @@
+schema: osera-patch-evidence/0.1.0
+producer: moderne
+release: 1.14.1-backpatch-00001
+baseline: v1.14+backpatch.baseline
+fixes:
+  - cve: CVE-2018-8017
+    upstream_fix_url: https://github.com/apache/tika/commit/62926cae31a02d4f23d21148435804b96c543cc7
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2018-8017
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-tika/commit/2c9f577
+    basis: backport
+    artifacts:
+      - org.apache.tika:tika-parsers
+    note: New in this release; ported onto 1.14; fixed at 1.14.1-backpatch-00001 (backpatch-tika@2c9f577).
+tests:
+  commit: 2c9f577a47dcd82e63bd46aa62c4032a83c2a57e
+  command: mvn -B -T1 -pl tika-core,tika-parsers -am -Dossindex.skip=true -Drat.skip=true -Dmaven.test.failure.ignore=true clean test
+  runtime: openjdk version 1.8.0_292 (Ubuntu 16.04 openjdk-8-jdk-headless, Linux x86_64, container backpatch-suite/tika-xenial:local built from ubuntu:16.04, suite-env.Dockerfile), tesseract 3.04.01, Apache Maven 3.9.16
+  report: tika-parsers-1.14.1-backpatch-00001-tests.zip
+  report_sha256: ea0d5832a90507c69665e7ff01898020ac2e476804c99793be8f4cd3f0137c04
+  result: pass
+  note: "960 tests at the patch commit, 19 of them skipped by the suite, 0 failed, 0 errors. The suite of record ran in a Linux x86_64 container of the line's era (Ubuntu 16.04: OpenJDK 8, tesseract 3.04); on the Mac, SQLite3ParserTest fails for want of a sqlite-jdbc native library and TesseractOCRParserTest against tesseract 5's command line, not for this change."
